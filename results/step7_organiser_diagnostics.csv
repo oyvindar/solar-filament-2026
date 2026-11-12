@@ -1,0 +1,15 @@
+quantity,value
+overlapping GT-prediction pairs (IoU > 0),6529.0
+mean IoU of overlapping pairs,0.5888917446136475
+median IoU of overlapping pairs,0.6432830691337585
+share of overlapping pairs with IoU > 0.5,0.7439117782202481
+mean Dice of overlapping pairs,0.7204380631446838
+median Dice of overlapping pairs,0.782924234867096
+GT filaments (per annotator),8199.0
+GT overlapped by no prediction (1:0),2083.0
+GT overlapped by exactly one prediction (1:1),5742.0
+GT overlapped by 2+ predictions (1:n),374.0
+prediction-annotator pairs,7089.0
+predictions overlapping no GT (0:1),664.0
+predictions overlapping exactly one GT (1:1),6324.0
+predictions overlapping 2+ GT (n:1),101.0

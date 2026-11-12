@@ -1,0 +1,17 @@
+quantity,value
+"OOF PQ, official rule, real masks",0.43383784806117237
+date-bootstrap 2.5%,0.42405583625646315
+date-bootstrap 97.5%,0.443517017738755
+90-image draws 2.5%,0.40807409623851665
+90-image draws median,0.4343290699083307
+90-image draws 97.5%,0.4579139293782541
+90-image draws min,0.3950799108139974
+share of 90-image draws <= 0.375,0.0
+share of 90-image draws <= 0.37,0.0
+n dates,656.0
+n images,707.0
+annotator-bootstrap 2.5%,0.41731947050866564
+annotator-bootstrap 97.5%,0.45193425889323774
+sd of 90-image draws,0.012565593541039682
+"PQ, one annotator per image",0.4254491651331925
+"PQ, lower half of annotators (>=20 images)",0.4050641661506261

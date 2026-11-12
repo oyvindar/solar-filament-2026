@@ -1,0 +1,16 @@
+# competition data and large outputs are never committed
+data/MAGFiLO_1.0_Kaggle_2026/
+work/
+*.pt
+*.pkl
+*.parquet
+*.npy
+
+# generated Kaggle kernel folders (rebuild with kaggle/make_kernels.py)
+kaggle/kernels/
+
+# scratch
+src/fsc/_fine_worker.py
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
