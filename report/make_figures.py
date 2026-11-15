@@ -1,7 +1,7 @@
 """Report figures from the notebook's saved results (work/results/examples.pkl, overlap_stats.npz).
 
 Usage: python report/make_figures.py <work_dir>
-Writes report/figures/fig_examples.pdf and report/figures/fig_diagnostics.pdf.
+Writes report/figures/fig_examples.pdf, fig_diagnostics.pdf and fig_gap.pdf (the last from results/ in the repository).
 """
 import os
 import pickle
@@ -72,9 +72,52 @@ def diagnostics(work, out):
                 gt_deg=deg_gt.tolist(), pred_deg=deg_pr.tolist())
 
 
+def gap(results, out):
+    """Figure 3: validation-vs-leaderboard noise test and the outcome of every annotated filament after stage 2.
+
+    Drawn at the ACM column width (3.33 in) and 2.45 in tall, the footprint the figure had in the submitted layout,
+    without tight cropping, so LaTeX does not rescale it and the text has the size used in Figure 2 (6-7 pt).
+    The two panels are subfigures, so their left margins are independent.
+    """
+    import pandas as pd
+    d90 = pd.read_csv(os.path.join(results, "step2_draw90.csv"))["pq"].to_numpy()
+    oof = float(pd.read_csv(os.path.join(results, "step2_noise.csv")).set_index("quantity")["value"]["OOF PQ, official rule, real masks"])
+    s3 = pd.read_csv(os.path.join(results, "step3_missed_filaments.csv")).sort_values("n")
+    fig = plt.figure(figsize=(3.33, 2.45), layout="constrained")
+    fig.get_layout_engine().set(h_pad=0.015, w_pad=0.015, hspace=0.0)
+    top, bottom = fig.subfigures(2, 1, height_ratios=[1.55, 1.0])
+    a, b = top.subplots(), bottom.subplots()
+    cnt, _, _ = a.hist(d90, bins=36, color=GREY, alpha=0.85)
+    ymax = cnt.max() * 1.9
+    a.axvspan(0.365, 0.375, color="#d08a1c", alpha=0.55)
+    a.axvline(oof, color=PRED_COLOR, lw=1.2)
+    a.set_ylim(0, ymax)
+    a.set_xlim(0.31, 0.48)
+    a.text(0.3628, ymax * 0.97, "public\nleaderboard\n0.37", color="#8a5a00", ha="right", va="top", linespacing=1.1)
+    a.text(oof - 0.0015, ymax * 0.97, "all 707 images\n0.434", color=PRED_COLOR, ha="right", va="top", linespacing=1.1)
+    a.set_xlabel("PQ of 90 random validation images", labelpad=1.5)
+    a.set_ylabel("draws", labelpad=1.5)
+    top.suptitle("a   The public score is not sampling noise", x=0.01, ha="left", fontsize=7)
+    names = {"matched": "matched (IoU > 0.5)", "poor_candidate": "no candidate reaches IoU 0.5", "rejected": "match available, not selected",
+             "no_overlap": "no candidate touches it", "too_small": "selected too small", "too_big": "selected too big"}
+    b.barh([names[o] for o in s3["outcome"]], 100 * s3["share_of_gt"], height=0.72,
+           color=[PRED_COLOR if o == "matched" else GREY for o in s3["outcome"]])
+    for y, sh in enumerate(s3["share_of_gt"]):
+        b.text(100 * sh + 1.0, y, f"{100 * sh:.0f}%", va="center", fontsize=6)
+    b.set_xlim(0, 72)
+    b.set_ylim(-0.55, len(s3) - 0.45)
+    b.tick_params(axis="y", length=0, pad=2)
+    b.xaxis.set_visible(False)
+    b.spines["bottom"].set_visible(False)
+    bottom.suptitle("b   Outcome of each annotated filament (stage 2, out-of-fold)", x=0.01, ha="left", fontsize=7)
+    fig.savefig(os.path.join(out, "fig_gap.pdf"))
+    fig.savefig(os.path.join(out, "fig_gap.png"), dpi=200)
+    return fig
+
 if __name__ == "__main__":
     work = sys.argv[1]
     out = os.path.join(HERE, "figures")
     os.makedirs(out, exist_ok=True)
     print(examples(work, out))
     print(diagnostics(work, out))
+    print("gap figure size (in):", tuple(round(float(v), 2) for v in gap(os.path.join(os.path.dirname(HERE), "results"), out).get_size_inches()))
