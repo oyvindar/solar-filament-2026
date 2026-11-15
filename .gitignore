@@ -14,3 +14,6 @@ src/fsc/_fine_worker.py
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
+
+# sandbox artefact
+.sink

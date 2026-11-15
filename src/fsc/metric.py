@@ -139,6 +139,29 @@ def pq_fast(gt_df: pd.DataFrame, pred_df: pd.DataFrame) -> PQResult:
     return PQResult(pq, sq, rq, tp, fp, fn, s, per)
 
 
+def overlap_stats(gt_df: pd.DataFrame, pred_df: pd.DataFrame) -> dict:
+    """The organisers' diagnostics: IoU and Dice of every overlapping (GT, prediction) pair, and how many
+    partners each GT filament and each prediction overlaps (one-to-many / many-to-one), per annotator."""
+    gt_ai = gt_df["filament_id"].str.split("_", n=1).str[0].to_numpy()
+    pr_img = pred_df["filament_id"].str.split("_", n=1).str[0].to_numpy()
+    pr_groups = pd.Series(np.arange(len(pred_df))).groupby(pr_img).apply(list).to_dict()
+    gt_rles, pr_rles = gt_df["segmentation_rle"].to_numpy(), pred_df["segmentation_rle"].to_numpy()
+    ious, gt_deg, pr_deg = [], [], []
+    for ai, idx in pd.Series(np.arange(len(gt_df))).groupby(gt_ai, sort=False):
+        g = [rle_obj(r) for r in gt_rles[idx.to_numpy()]]
+        pidx = pr_groups.get(ai.split("-", 1)[1], [])
+        if not pidx:
+            gt_deg.extend([0] * len(g))
+            continue
+        p = [rle_obj(r) for r in pr_rles[pidx]]
+        iou = np.asarray(mask_util.iou(p, g, [0] * len(g))).reshape(len(p), len(g)).T
+        ious.append(iou[iou > 0])
+        gt_deg.extend((iou > 0).sum(1).tolist())
+        pr_deg.extend((iou > 0).sum(0).tolist())
+    iou = np.concatenate(ious) if ious else np.zeros(0)
+    return dict(iou=iou, dice=2 * iou / (1 + iou), gt_degree=np.asarray(gt_deg), pred_degree=np.asarray(pr_deg))
+
+
 def check_submission(sub: pd.DataFrame, h: int = H, w: int = W) -> dict:
     """Kaggle format checks: columns, unique ids, non-empty masks, no pixel shared within an image."""
     assert list(sub.columns) == ["filament_id", "segmentation_rle"], sub.columns.tolist()
